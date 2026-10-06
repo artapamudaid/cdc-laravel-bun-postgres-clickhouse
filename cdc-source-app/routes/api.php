@@ -12,3 +12,10 @@ Route::get('/transactions/report/new', [TransactionReportController::class, 'new
 
 // Endpoint ClickHouse (Membaca dari ClickHouse via CDC)
 Route::get('/transactions/report/clickhouse', [TransactionReportController::class, 'clickhouseWay']);
+
+// ==========================================
+// SIMULASI EKSTRIM (ANALYTICS / AGREGASI)
+// ==========================================
+Route::get('/transactions/analytics/old', [TransactionReportController::class, 'analyticsOld']);
+Route::get('/transactions/analytics/new', [TransactionReportController::class, 'analyticsNew']);
+Route::get('/transactions/analytics/clickhouse', [TransactionReportController::class, 'analyticsClickhouse']);

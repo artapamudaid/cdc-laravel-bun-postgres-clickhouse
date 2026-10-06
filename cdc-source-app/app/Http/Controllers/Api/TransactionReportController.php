@@ -92,4 +92,71 @@ class TransactionReportController extends Controller
             'data' => $response->json()['data'] ?? []
         ]);
     }
+
+    // ==========================================
+    // SIMULASI EKSTRIM (ANALYTICS / AGREGASI)
+    // ==========================================
+
+    public function analyticsOld(Request $request)
+    {
+        $start = microtime(true);
+        $data = \Illuminate\Support\Facades\DB::table('orders')
+            ->selectRaw("TO_CHAR(created_at, 'YYYY-MM') as month, status, SUM(total_amount) as total_sales")
+            ->groupByRaw("TO_CHAR(created_at, 'YYYY-MM'), status")
+            ->orderBy('month', 'desc')
+            ->get();
+        $end = microtime(true);
+
+        return response()->json([
+            'method' => 'OLD WAY ANALYTICS (Source DB)',
+            'execution_time_ms' => round(($end - $start) * 1000, 2),
+            'data' => $data
+        ]);
+    }
+
+    public function analyticsNew(Request $request)
+    {
+        $start = microtime(true);
+        $data = FactTransactionReport::query()
+            ->selectRaw("TO_CHAR(order_date, 'YYYY-MM') as month, status, SUM(total_amount) as total_sales")
+            ->groupByRaw("TO_CHAR(order_date, 'YYYY-MM'), status")
+            ->orderBy('month', 'desc')
+            ->get();
+        $end = microtime(true);
+
+        return response()->json([
+            'method' => 'NEW WAY ANALYTICS (Reporting DB)',
+            'execution_time_ms' => round(($end - $start) * 1000, 2),
+            'data' => $data
+        ]);
+    }
+
+    public function analyticsClickhouse(Request $request)
+    {
+        $start = microtime(true);
+        
+        // ClickHouse menggunakan fungsi toYYYYMM untuk format bulanan (lebih cepat dari parsing string)
+        $query = "
+            SELECT 
+                toYYYYMM(order_date) as month, 
+                status, 
+                SUM(total_amount) as total_sales 
+            FROM reporting_db.fact_transaction_report 
+            GROUP BY month, status 
+            ORDER BY month DESC 
+            FORMAT JSON
+        ";
+
+        $response = \Illuminate\Support\Facades\Http::withBasicAuth('admin', 'Password_ch2026')
+            ->withBody($query, 'text/plain')
+            ->post('http://clickhouse-server:8123');
+            
+        $end = microtime(true);
+
+        return response()->json([
+            'method' => 'CLICKHOUSE ANALYTICS (Ultra Fast)',
+            'execution_time_ms' => round(($end - $start) * 1000, 2),
+            'data' => $response->json()['data'] ?? []
+        ]);
+    }
 }
