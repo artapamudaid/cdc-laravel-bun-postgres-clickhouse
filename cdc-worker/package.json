@@ -1,0 +1,15 @@
+{
+  "name": "cdc-worker",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  },
+  "dependencies": {
+    "postgres": "^3.4.9"
+  }
+}

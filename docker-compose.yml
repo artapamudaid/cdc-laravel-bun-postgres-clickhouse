@@ -1,0 +1,65 @@
+services:
+  cdc-source-app:
+    container_name: cdc-source-app-new
+    build: ./cdc-source-app
+    ports:
+      - "8009:80"
+    volumes:
+      - ./cdc-source-app:/app
+    env_file:
+      - ./cdc-source-app/.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - postgres-server-1
+    restart: always
+
+  cdc-worker:
+    build: ./cdc-worker
+    ports:
+      - "31100:8080"
+    restart: always # <-- Ini kuncinya! Docker akan auto-restart jika crash
+    env_file:
+      - ./cdc-worker/.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - postgres-server-1
+      - postgres-server-2
+    # Healthcheck agar Docker tahu worker ini sehat
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres-server-1:
+    image: postgres:16-alpine
+    ports:
+      - "54320:5432"
+    environment:
+      - POSTGRES_DB=aop_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: always
+
+  postgres-server-2:
+    image: postgres:16-alpine
+    ports:
+      - "54321:5432"
+    environment:
+      - POSTGRES_DB=reporting_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: always
+
+  clickhouse-server:
+    image: clickhouse/clickhouse-server:latest
+    ports:
+      - "8125:8123" # HTTP port (default 8123)
+      - "9010:9000" # Native port (default 9000)
+    environment:
+      - CLICKHOUSE_USER=admin
+      - CLICKHOUSE_PASSWORD=Password_ch2026
+      - CLICKHOUSE_DB=reporting_db
+    restart: always
