@@ -6,7 +6,7 @@ Proyek ini adalah *Proof of Concept* (PoC) untuk mengimplementasikan arsitektur 
 
 Sistem ini disimulasikan menggunakan arsitektur jaringan *multi-server* di dalam Docker:
 
-1. **Source App (Laravel 11)**: Berjalan di FrankenPHP (PHP 8.4). Berfungsi sebagai aplikasi utama yang menangani transaksi. Menyimpan data di **Postgres 1** dalam bentuk relasional yang normal (tabel `orders`, `customers`, `order_details`, dsb).
+1. **Source App (Laravel 13)**: Berjalan di FrankenPHP (PHP 8.4). Berfungsi sebagai aplikasi utama yang menangani transaksi. Menyimpan data di **Postgres 1** dalam bentuk relasional yang normal (tabel `orders`, `customers`, `order_details`, dsb).
 2. **CDC Trigger & Queue (Postgres 1)**: Menggunakan fitur *Trigger* bawaan Postgres untuk menangkap setiap operasi `INSERT`, `UPDATE`, `DELETE` secara otomatis dan menyimpannya ke dalam tabel `cdc_queue` tanpa membebani logika *code* aplikasi.
 3. **CDC Worker (Bun / TypeScript)**: Layanan *daemon* super cepat yang berjalan terpisah. Worker ini bertugas melakukan *polling* (membaca) `cdc_queue` setiap 1 detik. Jika ada perubahan, worker akan mem- *flatten* (menggabungkan) relasi data transaksi menjadi JSON/Flat lalu mengirimkannya ke *Target Database*.
 4. **Target DB 1 (Postgres 2)**: Database operasional terpisah khusus untuk *Reporting*. Data disimpan dalam 1 tabel *flat* (`fact_transaction_report`) agar *read query* sangat ringan (tidak ada operasi `JOIN` lagi).
