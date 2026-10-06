@@ -1,4 +1,4 @@
-# CDC Proof of Concept: Laravel 11 + Bun Worker + PostgreSQL + ClickHouse
+# CDC Proof of Concept: Laravel 13 + Bun Worker + PostgreSQL + ClickHouse
 
 Proyek ini adalah *Proof of Concept* (PoC) untuk mengimplementasikan arsitektur **Change Data Capture (CDC)** secara *real-time* dari *Source Database* (PostgreSQL) menuju dua *Reporting Database* sekaligus: **PostgreSQL (Tabel Flat)** dan **ClickHouse (Analytical DB)**.
 
