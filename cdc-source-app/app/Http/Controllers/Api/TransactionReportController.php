@@ -62,4 +62,34 @@ class TransactionReportController extends Controller
             'data' => $data
         ]);
     }
+
+    /**
+     * ENDPOINT 3: CLICKHOUSE WAY (Baca dari ClickHouse via HTTP API)
+     * Sangat cepat untuk agregasi jutaan baris.
+     */
+    public function clickhouseWay(Request $request)
+    {
+        $start = microtime(true); // Mulai timer
+
+        // ClickHouse HTTP API
+        $query = "SELECT * FROM reporting_db.fact_transaction_report";
+        if ($request->search) {
+            $query .= " WHERE order_number LIKE '%" . addslashes($request->search) . "%'";
+        }
+        $query .= " ORDER BY order_date DESC LIMIT 50 FORMAT JSON";
+
+        // Eksekusi query ke ClickHouse menggunakan Http Client Laravel bawaan
+        $response = \Illuminate\Support\Facades\Http::withBasicAuth('admin', 'Password_ch2026')
+            ->withBody($query, 'text/plain')
+            ->post('http://clickhouse-server:8123');
+
+        $end = microtime(true); // Stop timer
+
+        return response()->json([
+            'method' => 'CLICKHOUSE WAY (Ultra Fast Analytical DB)',
+            'execution_time_ms' => round(($end - $start) * 1000, 2),
+            'total_queries' => 1,
+            'data' => $response->json()['data'] ?? []
+        ]);
+    }
 }

@@ -9,3 +9,6 @@ Route::get('/transactions/report/old', [TransactionReportController::class, 'old
 
 // Endpoint Cara Baru (Reporting DB via CDC)
 Route::get('/transactions/report/new', [TransactionReportController::class, 'newWay']);
+
+// Endpoint ClickHouse (Membaca dari ClickHouse via CDC)
+Route::get('/transactions/report/clickhouse', [TransactionReportController::class, 'clickhouseWay']);

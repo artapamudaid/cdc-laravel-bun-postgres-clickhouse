@@ -10,6 +10,7 @@
     "typescript": "^7"
   },
   "dependencies": {
-    "postgres": "^3.4.9"
+    "postgres": "^3.4.9",
+    "@clickhouse/client": "^1.10.0"
   }
 }
