@@ -79,9 +79,9 @@ class TransactionReportController extends Controller
         $query .= " ORDER BY order_date DESC LIMIT 50 FORMAT JSON";
 
         // Eksekusi query ke ClickHouse menggunakan Http Client Laravel bawaan
-        $response = \Illuminate\Support\Facades\Http::withBasicAuth('admin', 'Password_ch2026')
+        $response = \Illuminate\Support\Facades\Http::withBasicAuth(env('CLICKHOUSE_USER', 'default'), env('CLICKHOUSE_PASSWORD', ''))
             ->withBody($query, 'text/plain')
-            ->post('http://clickhouse-server:8123');
+            ->post(env('CLICKHOUSE_HOST', 'http://clickhouse-server:8123'));
 
         $end = microtime(true); // Stop timer
 
@@ -147,9 +147,9 @@ class TransactionReportController extends Controller
             FORMAT JSON
         ";
 
-        $response = \Illuminate\Support\Facades\Http::withBasicAuth('admin', 'Password_ch2026')
+        $response = \Illuminate\Support\Facades\Http::withBasicAuth(env('CLICKHOUSE_USER', 'default'), env('CLICKHOUSE_PASSWORD', ''))
             ->withBody($query, 'text/plain')
-            ->post('http://clickhouse-server:8123');
+            ->post(env('CLICKHOUSE_HOST', 'http://clickhouse-server:8123'));
             
         $end = microtime(true);
 
@@ -157,6 +157,73 @@ class TransactionReportController extends Controller
             'method' => 'CLICKHOUSE ANALYTICS (Ultra Fast)',
             'execution_time_ms' => round(($end - $start) * 1000, 2),
             'data' => $response->json()['data'] ?? []
+        ]);
+    }
+
+    public function mongoWay(Request $request)
+    {
+        $start = microtime(true);
+
+        $query = \Illuminate\Support\Facades\DB::connection('mongodb')->table('fact_transaction_report');
+        
+        if ($request->search) {
+            $query->where('order_number', 'like', "%{$request->search}%");
+        }
+        
+        $data = $query->orderBy('order_date', 'desc')->paginate(50);
+
+        $end = microtime(true);
+
+        return response()->json([
+            'method' => 'MONGO WAY (Document DB via CDC)',
+            'execution_time_ms' => round(($end - $start) * 1000, 2),
+            'total_queries' => 1,
+            'data' => $data
+        ]);
+    }
+
+    public function analyticsMongo(Request $request)
+    {
+        $start = microtime(true);
+        
+        $data = \Illuminate\Support\Facades\DB::connection('mongodb')
+            ->table('fact_transaction_report')
+            ->raw(function ($collection) {
+                return $collection->aggregate([
+                    [
+                        '$addFields' => [
+                            'month' => ['$substr' => ['$order_date', 0, 7]]
+                        ]
+                    ],
+                    [
+                        '$group' => [
+                            '_id' => [
+                                'month' => '$month',
+                                'status' => '$status'
+                            ],
+                            'total_sales' => ['$sum' => '$total_amount']
+                        ]
+                    ],
+                    [
+                        '$project' => [
+                            '_id' => 0,
+                            'month' => '$_id.month',
+                            'status' => '$_id.status',
+                            'total_sales' => 1
+                        ]
+                    ],
+                    [
+                        '$sort' => ['month' => -1]
+                    ]
+                ]);
+            });
+
+        $end = microtime(true);
+
+        return response()->json([
+            'method' => 'MONGO ANALYTICS',
+            'execution_time_ms' => round(($end - $start) * 1000, 2),
+            'data' => $data
         ]);
     }
 }

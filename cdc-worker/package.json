@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "postgres": "^3.4.9",
-    "@clickhouse/client": "^1.10.0"
+    "@clickhouse/client": "^1.10.0",
+    "mongodb": "^6.10.0"
   }
 }

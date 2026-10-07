@@ -18,6 +18,8 @@ services:
     build: ./cdc-worker
     ports:
       - "31100:8080"
+    volumes:
+      - ./cdc-worker:/app
     restart: always # <-- Ini kuncinya! Docker akan auto-restart jika crash
     env_file:
       - ./cdc-worker/.env
@@ -62,4 +64,14 @@ services:
       - CLICKHOUSE_USER=admin
       - CLICKHOUSE_PASSWORD=Password_ch2026
       - CLICKHOUSE_DB=reporting_db
+    restart: always
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27018:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=rootpassword
+      - MONGO_INITDB_DATABASE=testing_db
     restart: always

@@ -9,7 +9,8 @@ RUN install-php-extensions \
     gd \
     bcmath \
     intl \
-    zip
+    zip \
+    mongodb
 
 WORKDIR /app
 
