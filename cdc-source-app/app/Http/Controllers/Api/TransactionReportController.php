@@ -25,7 +25,7 @@ class TransactionReportController extends Controller
                 $q->where('order_number', 'like', "%$search%");
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(50); // Kita ambil 50 data agar perbedaan waktu terasa
+            ->simplePaginate(50); // Kita gunakan simplePaginate agar adil dengan ClickHouse (tanpa COUNT)
 
         $end = microtime(true); // Stop timer
 
@@ -51,7 +51,7 @@ class TransactionReportController extends Controller
                 $q->where('order_number', 'like', "%$search%");
             })
             ->orderBy('order_date', 'desc')
-            ->paginate(50);
+            ->simplePaginate(50);
 
         $end = microtime(true); // Stop timer
 
@@ -170,7 +170,7 @@ class TransactionReportController extends Controller
             $query->where('order_number', 'like', "%{$request->search}%");
         }
         
-        $data = $query->orderBy('order_date', 'desc')->paginate(50);
+        $data = $query->orderBy('order_date', 'desc')->simplePaginate(50);
 
         $end = microtime(true);
 

@@ -125,11 +125,11 @@ Pengujian dilakukan untuk menyimulasikan masuknya **50.000 data pesanan (orders)
   *(Waktu yang dibutuhkan CDC Worker untuk melakukan agregasi data dan Bulk Insert/Upsert 50.000 data tersebut ke Postgres 2, ClickHouse, dan MongoDB secara paralel)*
 
 ### 2. Perbandingan Kecepatan View Data (Read Pagination Limit 50)
-Endpoint diukur dengan parameter waktu memuat 50 data ber-relasi terakhir.
-- **PostgreSQL 1 (Source DB - Cara Lama)**: **88.11 ms** *(Terdapat overhead JOIN & Eloquent Eager Loading).*
-- **PostgreSQL 2 (Reporting DB - CDC)**: **22.84 ms** ⚡ *(Sangat cepat karena hanya membaca 1 tabel Flat).*
-- **MongoDB (Document DB - CDC)**: **36.47 ms** *(Sangat ideal dan ngebut untuk format JSON bersarang / nested).*
-- **ClickHouse (Analytics DB - CDC)**: **68.93 ms** *(Memiliki sedikit overhead saat membaca seluruh kolom menjadi baris penuh).*
+Endpoint diukur dengan parameter waktu memuat 50 data ber-relasi terakhir (tanpa COUNT overhead / simplePaginate).
+- **PostgreSQL 1 (Source DB - Cara Lama)**: **76.71 ms** *(Terdapat overhead JOIN & Eloquent Eager Loading).*
+- **PostgreSQL 2 (Reporting DB - CDC)**: **22.09 ms** ⚡ *(Sangat cepat karena hanya membaca 1 tabel Flat).*
+- **MongoDB (Document DB - CDC)**: **30.71 ms** *(Sangat ideal dan ngebut untuk format JSON bersarang / nested).*
+- **ClickHouse (Analytics DB - CDC)**: **21.60 ms** ⚡⚡ *(Menyusul menjadi yang tercepat atau seimbang dengan Postgres Flat untuk penarikan data murni).*
 
 ### 3. Perbandingan Kecepatan Agregasi Analytics (GROUP BY & SUM)
 Endpoint diukur dengan melakukan rekapitulasi data penjualan (`SUM(total_amount)`) dikelompokkan per bulan untuk **keseluruhan 50.000 baris data**.
